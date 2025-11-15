@@ -3,8 +3,21 @@
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { apiPatch } from "@/lib/api";
+import type { TaskType } from "@/types/task";
 
-export default function TaskStatusModal({ open, setOpen, task, refresh }) {
+type TaskStatusModalProps = {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  task: TaskType;
+  refresh: () => void;
+};
+
+export default function TaskStatusModal({
+  open,
+  setOpen,
+  task,
+  refresh,
+}: TaskStatusModalProps) {
   const [loading, setLoading] = useState(false);
 
   if (!open) return null;
@@ -13,7 +26,6 @@ export default function TaskStatusModal({ open, setOpen, task, refresh }) {
     setLoading(true);
 
     try {
-      // Get logged-in user
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -25,7 +37,6 @@ export default function TaskStatusModal({ open, setOpen, task, refresh }) {
         return;
       }
 
-      // Update status using API wrapper
       const json = await apiPatch(
         `/tasks/${task.id}`,
         { status: "completed" },
@@ -33,7 +44,7 @@ export default function TaskStatusModal({ open, setOpen, task, refresh }) {
       );
 
       if (json.success) {
-        if (typeof refresh === "function") refresh();
+        refresh();
         setOpen(false);
       } else {
         console.error("Failed to update task status", json);

@@ -4,7 +4,19 @@ import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
 import { apiPost } from "@/lib/api";
 
-export default function CreateTaskModal({ open, setOpen, projectId, refresh }) {
+type CreateTaskModalProps = {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  projectId: string;
+  refresh?: () => void;
+};
+
+export default function CreateTaskModal({
+  open,
+  setOpen,
+  projectId,
+  refresh,
+}: CreateTaskModalProps) {
   const [title, setTitle] = useState("");
   const [desc, setDesc] = useState("");
   const [loading, setLoading] = useState(false);
@@ -16,7 +28,6 @@ export default function CreateTaskModal({ open, setOpen, projectId, refresh }) {
     setLoading(true);
 
     try {
-      // 1. Get current logged-in user from Supabase
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -24,20 +35,23 @@ export default function CreateTaskModal({ open, setOpen, projectId, refresh }) {
       const userId = user?.id;
       if (!userId) return alert("User not authenticated");
 
-      // 2. Send to backend using unified API wrapper
-      const json = await apiPost("/tasks", {
-        project_id: projectId,
-        title,
-        description: desc,
-      }, {
-        "x-user-id": userId
-      });
+      const json = await apiPost(
+        "/tasks",
+        {
+          project_id: projectId,
+          title,
+          description: desc,
+        },
+        {
+          "x-user-id": userId,
+        }
+      );
 
-      // 3. Handle response
       if (json.success) {
         setTitle("");
         setDesc("");
         setOpen(false);
+
         if (typeof refresh === "function") refresh();
       } else {
         console.error("Create task failed", json);

@@ -3,19 +3,26 @@
 import { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 
-export default function ProgressChart({ completed, total }) {
-  const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+// ⭐ Add Types for Props
+interface ProgressChartProps {
+  completed: number;
+  total: number;
+}
+
+export default function ProgressChart({ completed, total }: ProgressChartProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const chartRef = useRef<Chart | null>(null);
 
   useEffect(() => {
+    if (!canvasRef.current) return;
+
     const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
 
     const remaining = Math.max(total - completed, 0);
 
-    // Destroy old chart to avoid memory issues
-    if (chartRef.current) {
-      chartRef.current.destroy();
-    }
+    // Destroy old chart
+    if (chartRef.current) chartRef.current.destroy();
 
     chartRef.current = new Chart(ctx, {
       type: "doughnut",
@@ -24,7 +31,7 @@ export default function ProgressChart({ completed, total }) {
         datasets: [
           {
             data: [completed, remaining],
-            backgroundColor: ["#10b981", "#e5e7eb"], // consistent theme
+            backgroundColor: ["#10b981", "#e5e7eb"],
             borderWidth: 2,
             borderColor: "#ffffff",
           },

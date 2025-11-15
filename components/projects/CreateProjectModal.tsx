@@ -2,8 +2,19 @@
 
 import { useState } from "react";
 import { apiPost } from "@/lib/api";
+import { ProjectType } from "@/types/project";
 
-export default function CreateProjectModal({ open, setOpen, refresh }) {
+type CreateProjectModalProps = {
+  open: boolean;
+  setOpen: (v: boolean) => void;
+  refresh?: (newProject: ProjectType | null) => void;
+};
+
+export default function CreateProjectModal({
+  open,
+  setOpen,
+  refresh,
+}: CreateProjectModalProps) {
   const [name, setName] = useState("");
   const [desc, setDesc] = useState("");
 
@@ -13,7 +24,6 @@ export default function CreateProjectModal({ open, setOpen, refresh }) {
     if (!name.trim()) return alert("Project name is required");
 
     try {
-      // Call backend using wrapper (auto-handles API base URL)
       const json = await apiPost("/projects", {
         name,
         description: desc,
@@ -24,7 +34,7 @@ export default function CreateProjectModal({ open, setOpen, refresh }) {
         setDesc("");
         setOpen(false);
 
-        if (typeof refresh === "function") refresh();
+        if (refresh) refresh(json.data ?? null);
       } else {
         console.error("Create project failed:", json);
         alert("Failed to create project");
@@ -57,17 +67,11 @@ export default function CreateProjectModal({ open, setOpen, refresh }) {
         />
 
         <div className="flex justify-end space-x-3">
-          <button
-            onClick={() => setOpen(false)}
-            className="px-4 py-2 border rounded-md"
-          >
+          <button onClick={() => setOpen(false)} className="px-4 py-2 border rounded-md">
             Cancel
           </button>
 
-          <button
-            onClick={createProject}
-            className="px-4 py-2 bg-blue-600 text-white rounded-md"
-          >
+          <button onClick={createProject} className="px-4 py-2 bg-blue-600 text-white rounded-md">
             Create
           </button>
         </div>

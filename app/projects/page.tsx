@@ -5,8 +5,15 @@ import { useRouter } from "next/navigation";
 import CreateProjectModal from "@/components/projects/CreateProjectModal";
 import { apiGet } from "@/lib/api";
 
+// ⭐ FIX: define project type
+type ProjectType = {
+  id: string;
+  name: string;
+  description: string;
+};
+
 export default function ProjectsPage() {
-  const [projects, setProjects] = useState([]);
+  const [projects, setProjects] = useState<ProjectType[]>([]); // ⭐ FIX
   const [open, setOpen] = useState(false);
   const router = useRouter();
 
@@ -16,11 +23,10 @@ export default function ProjectsPage() {
 
   async function fetchProjects() {
     try {
-      // apiGet already returns JSON
       const json = await apiGet("/projects");
 
       if (json.success) {
-        setProjects(json.data);
+        setProjects(json.data as ProjectType[]); // ⭐ Ensure typed
       } else {
         console.error("API error:", json.message);
       }
@@ -58,13 +64,14 @@ export default function ProjectsPage() {
       </div>
 
       <CreateProjectModal
-        open={open}
-        setOpen={setOpen}
-        refresh={(newProject) => {
-          fetchProjects();
-          if (newProject?.id) router.push(`/projects/${newProject.id}`);
-        }}
-      />
+  open={open}
+  setOpen={setOpen}
+  refresh={(newProject: ProjectType | null) => {
+    fetchProjects();
+    if (newProject?.id) router.push(`/projects/${newProject.id}`);
+  }}
+/>
+
     </div>
   );
 }

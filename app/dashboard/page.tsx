@@ -1,5 +1,16 @@
 "use client";
 
+type ActivityItem = {
+  id: string;
+  message: string;
+  created_at: string;
+  meta?: {
+    task_title: string;
+    task_id: string;
+    project_name: string;
+  };
+};
+
 import { useEffect, useState, useRef } from "react";
 import Chart from "chart.js/auto";
 import { apiGet } from "@/lib/api";
@@ -18,14 +29,17 @@ export default function DashboardPage() {
   // -------------------------------
   // ⭐ HARDCODED ACTIVITY
   // -------------------------------
-  const [activity, setActivity] = useState([]);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
+
   const [showAllActivity, setShowAllActivity] = useState(false);
 
-  const overallRef = useRef(null);
-  const breakdownRef = useRef(null);
+  const overallRef = useRef<HTMLCanvasElement | null>(null);
+const breakdownRef = useRef<HTMLCanvasElement | null>(null);
 
-  const overallChart = useRef(null);
-  const breakdownChart = useRef(null);
+
+  const overallChart = useRef<Chart | null>(null);
+const breakdownChart = useRef<Chart | null>(null);
+
 
   useEffect(() => {
     loadStats();
@@ -42,11 +56,16 @@ export default function DashboardPage() {
       const projectJson = await await apiGet("/projects");
 
       if (taskJson.success && projectJson.success) {
-        const tasks = taskJson.data;
+        type DashboardTask = {
+  status: string;
+  [key: string]: any;
+};
 
-        const completed = tasks.filter((t) => t.status === "completed").length;
-        const pending = tasks.filter((t) => t.status === "todo").length;
-        const inprogress = tasks.filter((t) => t.status === "inprogress").length;
+        const tasks = taskJson.data as DashboardTask[];
+
+        const completed = tasks.filter((t: DashboardTask) => t.status === "completed").length;
+        const pending = tasks.filter((t: DashboardTask) => t.status === "todo").length;
+        const inprogress = tasks.filter((t: DashboardTask) => t.status === "inprogress").length;
 
         const total = tasks.length;
         const progressPercent =
@@ -122,29 +141,44 @@ export default function DashboardPage() {
   // -------------------------------
   // CHARTS
   // -------------------------------
-  function renderCharts(completed, pending, inprogress) {
-    if (overallChart.current) overallChart.current.destroy();
-    if (breakdownChart.current) breakdownChart.current.destroy();
+  function renderCharts(
+  completed: number,
+  pending: number,
+  inprogress: number
+) {
+  // REQUIRE canvases to exist
+  if (!overallRef.current || !breakdownRef.current) {
+    console.warn("Canvas refs not ready yet");
+    return;
+  }
 
-    overallChart.current = new Chart(overallRef.current, {
-      type: "doughnut",
-      data: {
-        labels: ["Completed", "Remaining"],
-        datasets: [
-          {
-            data: [completed, pending + inprogress],
-            backgroundColor: ["#10B981", "#CBD5E1"],
-            borderWidth: 0,
-          },
-        ],
-      },
-      options: {
-        cutout: "70%",
-        maintainAspectRatio: false,
-      },
-    });
+  // Destroy previous charts
+  if (overallChart.current) overallChart.current.destroy();
+  if (breakdownChart.current) breakdownChart.current.destroy();
 
-    breakdownChart.current = new Chart(breakdownRef.current, {
+  // Create Overall Chart
+  overallChart.current = new Chart(overallRef.current as HTMLCanvasElement, {
+    type: "doughnut",
+    data: {
+      labels: ["Completed", "Remaining"],
+      datasets: [
+        {
+          data: [completed, pending + inprogress],
+          backgroundColor: ["#10B981", "#CBD5E1"],
+          borderWidth: 0,
+        },
+      ],
+    },
+    options: {
+      cutout: "70%",
+      maintainAspectRatio: false,
+    },
+  });
+
+  // Create Breakdown Chart
+  breakdownChart.current = new Chart(
+    breakdownRef.current as HTMLCanvasElement,
+    {
       type: "bar",
       data: {
         labels: ["Completed", "Pending", "In Progress"],
@@ -161,8 +195,10 @@ export default function DashboardPage() {
         scales: { y: { beginAtZero: true } },
         plugins: { legend: { display: false } },
       },
-    });
-  }
+    }
+  );
+}
+
 
   return (
     <div className="space-y-6 p-4">
@@ -208,16 +244,17 @@ export default function DashboardPage() {
             <li key={a.id} className="p-3 border rounded bg-slate-50">
               {/* Task link */}
               <a
-                href={`/tasks/${a.meta.task_id}`}
+                href={`/tasks/${a.meta?.task_id ?? ""}`}
                 className="font-medium text-blue-600 underline"
               >
-                {a.meta.task_title}
+                {a.meta?.task_title ?? "Untitled Task"}
+
               </a>
 
               <div className="text-sm text-gray-700">{a.message}</div>
 
               <div className="text-xs text-gray-500">
-                Project: {a.meta.project_name}
+                Project: {a.meta?.project_name ?? "Unknown Project"}
               </div>
 
               <div className="text-xs text-gray-400 mt-1">
@@ -243,7 +280,12 @@ export default function DashboardPage() {
   );
 }
 
-function Stat({ title, value }) {
+interface StatProps {
+  title: string;
+  value: string | number;
+}
+
+function Stat({ title, value }: StatProps) {
   return (
     <div className="p-4 bg-white rounded shadow text-center">
       <div className="text-gray-500 text-sm">{title}</div>

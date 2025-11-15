@@ -2,18 +2,41 @@
 
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
-import StatusBadge from "@/components/tasks/StatusBadge";
-import TaskStatusModal from "@/components/tasks/TaskStatusModal";
+import TaskStatusModal from "@/tasks/TaskStatusModal";
 import { apiGet, apiPost } from "@/lib/api";
+import StatusBadge from "@/tasks/StatusBadge";
+import type { StatusType } from "@/tasks/StatusBadge";
+
+
+// ⭐ Define Task Type
+type TaskType = {
+  id: string;
+  title: string;
+  description: string;
+  status: StatusType;  // ✅ FIXED TYPE
+  project_id: string;
+  created_at: string;
+  projects?: {
+    name: string;
+  };
+};
+
+// ⭐ Define Activity Type
+type ActivityItem = {
+  id: string;
+  message: string;
+  created_at: string;
+};
 
 export default function TaskDetailPage() {
   const { id } = useParams();
 
-  const [task, setTask] = useState(null);
-  const [activity, setActivity] = useState([]);
+  const [task, setTask] = useState<TaskType | null>(null);
+  const [activity, setActivity] = useState<ActivityItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [openStatusModal, setOpenStatusModal] = useState(false);
   const [activityText, setActivityText] = useState("");
+
 
   useEffect(() => {
     if (id) {

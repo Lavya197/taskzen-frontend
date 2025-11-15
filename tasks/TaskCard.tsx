@@ -4,8 +4,14 @@ import Link from "next/link";
 import StatusBadge from "./StatusBadge";
 import TaskStatusModal from "./TaskStatusModal";
 import { useState } from "react";
+import type { TaskType } from "@/types/task";
 
-export default function TaskCard({ task, refresh }) {
+type TaskCardProps = {
+  task: TaskType;
+  refresh: () => void;
+};
+
+export default function TaskCard({ task, refresh }: TaskCardProps) {
   const [open, setOpen] = useState(false);
 
   const projectName = task.projects?.name ?? task.project_name ?? "—";
@@ -16,7 +22,9 @@ export default function TaskCard({ task, refresh }) {
         <div>
           <h3 className="text-lg font-medium">{task.title}</h3>
           <p className="text-sm text-gray-500 mt-1">{task.description}</p>
-          <div className="mt-2 text-xs text-gray-400">Project: {projectName}</div>
+          <div className="mt-2 text-xs text-gray-400">
+            Project: {projectName}
+          </div>
         </div>
 
         <div className="flex flex-col items-end space-y-2">
@@ -29,14 +37,22 @@ export default function TaskCard({ task, refresh }) {
               Change status
             </button>
 
-            <Link href={`/tasks/${task.id}`} className="px-3 py-1 bg-blue-600 text-white rounded text-sm">
+            <Link
+              href={`/tasks/${task.id}`}
+              className="px-3 py-1 bg-blue-600 text-white rounded text-sm"
+            >
               Open
             </Link>
           </div>
         </div>
       </div>
 
-      <TaskStatusModal open={open} setOpen={setOpen} task={task} refresh={refresh} />
+      <TaskStatusModal
+        open={open}
+        setOpen={setOpen}
+        task={task}
+        refresh={refresh}
+      />
     </div>
   );
 }

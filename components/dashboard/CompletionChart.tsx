@@ -3,12 +3,26 @@
 import { useEffect, useRef } from "react";
 import Chart from "chart.js/auto";
 
-export default function CompletionChart({ completed, pending, inProgress }) {
-  const canvasRef = useRef(null);
-  const chartRef = useRef(null);
+// ⭐ ADD TYPE FOR PROPS
+interface CompletionChartProps {
+  completed: number;
+  pending: number;
+  inProgress: number;
+}
+
+export default function CompletionChart({
+  completed,
+  pending,
+  inProgress,
+}: CompletionChartProps) {
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const chartRef = useRef<Chart | null>(null);
 
   useEffect(() => {
+    if (!canvasRef.current) return;
+
     const ctx = canvasRef.current.getContext("2d");
+    if (!ctx) return;
 
     if (chartRef.current) chartRef.current.destroy();
 
@@ -34,15 +48,15 @@ export default function CompletionChart({ completed, pending, inProgress }) {
             labels: {
               boxWidth: 12,
               padding: 12,
-              font: { size: 12 }
-            }
+              font: { size: 12 },
+            },
           },
         },
         scales: {
           y: {
             beginAtZero: true,
             ticks: { font: { size: 11 } },
-            grid: { color: "#f3f4f6" }, // light grid
+            grid: { color: "#f3f4f6" },
           },
           x: {
             ticks: { font: { size: 11 } },

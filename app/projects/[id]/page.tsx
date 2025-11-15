@@ -2,14 +2,22 @@
 
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import CreateTaskModal from "@/components/tasks/CreateTaskModal";
-import TaskCard from "@/components/tasks/TaskCard";
-import { apiGet } from "@/lib/api"; // ✅ use API helper
+import CreateTaskModal from "@/tasks/CreateTaskModal";
+import TaskCard from "@/tasks/TaskCard";
+import { apiGet } from "@/lib/api";
+
+// ⭐ TypeScript fix: define project type
+type ProjectType = {
+  id: string;
+  name: string;
+  description: string;
+};
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
-  const [project, setProject] = useState(null);
-  const [tasks, setTasks] = useState([]);
+
+  const [project, setProject] = useState<ProjectType | null>(null);
+  const [tasks, setTasks] = useState<any[]>([]);
   const [open, setOpen] = useState(false);
 
   useEffect(() => {
@@ -27,7 +35,7 @@ export default function ProjectDetailPage() {
       const json = await apiGet(`/projects/${id}`);
 
       if (json.success) {
-        setProject(json.data);
+        setProject(json.data as ProjectType);
       } else {
         console.error("API error:", json.message);
       }
@@ -53,8 +61,7 @@ export default function ProjectDetailPage() {
     }
   }
 
-  if (!project)
-    return <div className="p-6">Loading project...</div>;
+  if (!project) return <div className="p-6">Loading project...</div>;
 
   return (
     <div className="space-y-6">
@@ -107,7 +114,7 @@ export default function ProjectDetailPage() {
         open={open}
         setOpen={setOpen}
         refresh={fetchTasks}
-        projectId={id}
+        projectId={id as string}
       />
     </div>
   );

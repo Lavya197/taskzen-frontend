@@ -1,11 +1,12 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import TaskCard from "@/components/tasks/TaskCard";
+import TaskCard from "@/tasks/TaskCard";
 import { apiGet } from "@/lib/api";
+import type { TaskType } from "@/types/task";   // ⭐ CORRECT TYPE
 
 export default function TasksPage() {
-  const [tasks, setTasks] = useState([]);
+  const [tasks, setTasks] = useState<TaskType[]>([]);
 
   useEffect(() => {
     fetchTasks();
@@ -15,7 +16,7 @@ export default function TasksPage() {
     try {
       const json = await apiGet("/tasks");
 
-      if (json.success) setTasks(json.data);
+      if (json.success) setTasks(json.data as TaskType[]);
       else setTasks([]);
     } catch (error) {
       console.error("Failed to load tasks", error);

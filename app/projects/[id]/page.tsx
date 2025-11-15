@@ -4,6 +4,7 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import CreateTaskModal from "@/components/tasks/CreateTaskModal";
 import TaskCard from "@/components/tasks/TaskCard";
+import { apiGet } from "@/lib/api"; // ✅ use API helper
 
 export default function ProjectDetailPage() {
   const { id } = useParams();
@@ -18,30 +19,49 @@ export default function ProjectDetailPage() {
     }
   }, [id]);
 
+  // ----------------------------
+  // FETCH PROJECT
+  // ----------------------------
   async function fetchProject() {
-    const res = await fetch(`http://localhost:5000/projects/${id}`);
-    const data = await res.json();
-    if (data.success) setProject(data.data);
+    try {
+      const json = await apiGet(`/projects/${id}`);
+
+      if (json.success) {
+        setProject(json.data);
+      } else {
+        console.error("API error:", json.message);
+      }
+    } catch (e) {
+      console.error("Failed to fetch project", e);
+    }
   }
 
+  // ----------------------------
+  // FETCH PROJECT TASKS
+  // ----------------------------
   async function fetchTasks() {
-  try {
-    const res = await fetch(`http://localhost:5000/tasks?project_id=${id}`);
-    const json = await res.json();
-    if (json.success) setTasks(json.data);
-    else setTasks([]);
-  } catch (err) {
-    console.error("Failed to fetch project tasks", err);
+    try {
+      const json = await apiGet(`/tasks?project_id=${id}`);
+
+      if (json.success) {
+        setTasks(json.data);
+      } else {
+        setTasks([]);
+      }
+    } catch (err) {
+      console.error("Failed to fetch project tasks", err);
+    }
   }
-}
 
-
-  if (!project) return <div className="p-6">Loading project...</div>;
+  if (!project)
+    return <div className="p-6">Loading project...</div>;
 
   return (
     <div className="space-y-6">
+      {/* HEADER */}
       <div className="flex justify-between items-center">
         <h1 className="text-2xl font-semibold">{project.name}</h1>
+
         <button
           onClick={() => setOpen(true)}
           className="px-4 py-2 bg-blue-600 text-white rounded-md"
@@ -52,33 +72,37 @@ export default function ProjectDetailPage() {
 
       <p className="text-gray-600">{project.description}</p>
 
-      {/* ANALYTICS PLACEHOLDER */}
+      {/* ANALYTICS */}
       <div className="grid grid-cols-3 gap-4">
-        <div className="p-4 bg-white rounded shadow">Open: {tasks.length}</div>
+        <div className="p-4 bg-white rounded shadow">
+          Open: {tasks.length}
+        </div>
+
         <div className="p-4 bg-white rounded shadow">
           Completed: {tasks.filter((t) => t.status === "completed").length}
         </div>
+
         <div className="p-4 bg-white rounded shadow">
-          Progress: {
-            tasks.length
-              ? Math.round(
-                  (tasks.filter((t) => t.status === "completed").length /
-                    tasks.length) *
-                    100
-                )
-              : 0
-          }
+          Progress:{" "}
+          {tasks.length
+            ? Math.round(
+                (tasks.filter((t) => t.status === "completed").length /
+                  tasks.length) *
+                  100
+              )
+            : 0}
           %
         </div>
       </div>
 
-      {/* TASKS LIST */}
+      {/* TASK LIST */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {tasks.map((task) => (
-          <TaskCard key={task.id} task={task} />
+          <TaskCard key={task.id} task={task} refresh={fetchTasks} />
         ))}
       </div>
 
+      {/* CREATE TASK MODAL */}
       <CreateTaskModal
         open={open}
         setOpen={setOpen}

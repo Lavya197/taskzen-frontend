@@ -14,20 +14,12 @@ export default function Navbar({ currentUserId }) {
     return () => clearInterval(iv);
   }, [currentUserId]);
 
-  async function fetchUnread() {
-    try {
-      const res = await fetch(`http://localhost:5000/notifications/unread-count?user_id=${currentUserId}`);
-      const json = await res.json();
-      if (json.success) setUnread(json.data.unread ?? 0);
-    } catch (err) {
-      console.error("Failed to fetch unread count", err);
-    }
-  }
+
 
   return (
     <nav className="w-full bg-white px-4 py-3 flex items-center justify-between shadow">
       <div className="flex items-center space-x-4">
-        <Link href="/" className="text-lg font-bold">LynxFlow</Link>
+        <Link href="/" className="text-lg font-bold">TaskZen</Link>
       </div>
 
       <div className="flex items-center space-x-4">

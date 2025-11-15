@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import TaskCard from "@/components/tasks/TaskCard";
+import { apiGet } from "@/lib/api";
 
 export default function TasksPage() {
   const [tasks, setTasks] = useState([]);
@@ -12,8 +13,8 @@ export default function TasksPage() {
 
   async function fetchTasks() {
     try {
-      const res = await fetch("http://localhost:5000/tasks");
-      const json = await res.json();
+      const json = await apiGet("/tasks");
+
       if (json.success) setTasks(json.data);
       else setTasks([]);
     } catch (error) {
@@ -25,7 +26,9 @@ export default function TasksPage() {
     <div className="space-y-6">
       <h1 className="text-xl font-semibold">All Tasks</h1>
 
-      {tasks.length === 0 && <p className="text-gray-600">No tasks available.</p>}
+      {tasks.length === 0 && (
+        <p className="text-gray-600">No tasks available.</p>
+      )}
 
       <div className="space-y-4">
         {tasks.map((task) => (

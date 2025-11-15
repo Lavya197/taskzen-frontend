@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import Chart from "chart.js/auto";
+import { apiGet } from "@/lib/api";
+
 
 export default function DashboardPage() {
   const [stats, setStats] = useState({
@@ -35,11 +37,9 @@ export default function DashboardPage() {
   // -------------------------------
   async function loadStats() {
     try {
-      const taskRes = await fetch("http://localhost:5000/tasks");
-      const taskJson = await taskRes.json();
+      const taskJson = await await apiGet("/tasks");
 
-      const projectRes = await fetch("http://localhost:5000/projects");
-      const projectJson = await projectRes.json();
+      const projectJson = await await apiGet("/projects");
 
       if (taskJson.success && projectJson.success) {
         const tasks = taskJson.data;

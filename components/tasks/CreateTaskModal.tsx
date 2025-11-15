@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { apiPost } from "@/lib/api";
 
 export default function CreateTaskModal({ open, setOpen, projectId, refresh }) {
   const [title, setTitle] = useState("");
@@ -15,7 +16,7 @@ export default function CreateTaskModal({ open, setOpen, projectId, refresh }) {
     setLoading(true);
 
     try {
-      // get current user id from supabase auth
+      // 1. Get current logged-in user from Supabase
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -23,20 +24,16 @@ export default function CreateTaskModal({ open, setOpen, projectId, refresh }) {
       const userId = user?.id;
       if (!userId) return alert("User not authenticated");
 
-      const res = await fetch("http://localhost:5000/tasks", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId,
-        },
-        body: JSON.stringify({
-          project_id: projectId,
-          title,
-          description: desc,
-        }),
+      // 2. Send to backend using unified API wrapper
+      const json = await apiPost("/tasks", {
+        project_id: projectId,
+        title,
+        description: desc,
+      }, {
+        "x-user-id": userId
       });
 
-      const json = await res.json();
+      // 3. Handle response
       if (json.success) {
         setTitle("");
         setDesc("");
@@ -76,11 +73,18 @@ export default function CreateTaskModal({ open, setOpen, projectId, refresh }) {
         />
 
         <div className="flex justify-end space-x-3">
-          <button onClick={() => setOpen(false)} className="px-4 py-2 border rounded-md">
+          <button
+            onClick={() => setOpen(false)}
+            className="px-4 py-2 border rounded-md"
+          >
             Cancel
           </button>
 
-          <button onClick={createTask} className="px-4 py-2 bg-blue-600 text-white rounded-md" disabled={loading}>
+          <button
+            onClick={createTask}
+            className="px-4 py-2 bg-blue-600 text-white rounded-md"
+            disabled={loading}
+          >
             {loading ? "Creating…" : "Create Task"}
           </button>
         </div>

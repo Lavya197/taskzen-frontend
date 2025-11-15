@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import CreateProjectModal from "@/components/projects/CreateProjectModal";
+import { apiGet } from "@/lib/api";
 
 export default function ProjectsPage() {
   const [projects, setProjects] = useState([]);
@@ -15,11 +16,13 @@ export default function ProjectsPage() {
 
   async function fetchProjects() {
     try {
-      const res = await fetch("http://localhost:5000/projects");
-      const data = await res.json();
+      // apiGet already returns JSON
+      const json = await apiGet("/projects");
 
-      if (data.success) {
-        setProjects(data.data);
+      if (json.success) {
+        setProjects(json.data);
+      } else {
+        console.error("API error:", json.message);
       }
     } catch (err) {
       console.error("Failed to fetch projects", err);
@@ -45,7 +48,8 @@ export default function ProjectsPage() {
           <div
             key={project.id}
             onClick={() => router.push(`/projects/${project.id}`)}
-            className="p-5 bg-white border border-gray-200 rounded-lg shadow-sm hover:shadow-md transition cursor-pointer"
+            className="p-5 bg-white border border-gray-200 rounded-lg shadow-sm 
+                       hover:shadow-md transition cursor-pointer"
           >
             <h2 className="text-lg font-semibold">{project.name}</h2>
             <p className="text-gray-500 mt-1">{project.description}</p>

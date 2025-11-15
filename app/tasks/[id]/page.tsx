@@ -1,19 +1,18 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { useParams, useRouter } from "next/navigation";
+import { useParams } from "next/navigation";
 import StatusBadge from "@/components/tasks/StatusBadge";
 import TaskStatusModal from "@/components/tasks/TaskStatusModal";
+import { apiGet, apiPost } from "@/lib/api";
 
 export default function TaskDetailPage() {
   const { id } = useParams();
-  const router = useRouter();
 
   const [task, setTask] = useState(null);
   const [activity, setActivity] = useState([]);
   const [loading, setLoading] = useState(true);
   const [openStatusModal, setOpenStatusModal] = useState(false);
-
   const [activityText, setActivityText] = useState("");
 
   useEffect(() => {
@@ -24,32 +23,28 @@ export default function TaskDetailPage() {
   }, [id]);
 
   // ------------------------------
-  // FETCH TASK DETAILS
+  // FETCH TASK
   // ------------------------------
   async function fetchTask() {
     try {
-      const res = await fetch(`http://localhost:5000/tasks/${id}`);
-      const json = await res.json();
-
+      const json = await apiGet(`/tasks/${id}`);
       if (json.success) setTask(json.data);
     } catch (err) {
-      console.error("Failed to fetch task", err);
+      console.error("Failed to load task", err);
     } finally {
       setLoading(false);
     }
   }
 
   // ------------------------------
-  // FETCH ACTIVITY LOGS
+  // FETCH ACTIVITY
   // ------------------------------
   async function fetchActivity() {
     try {
-      const res = await fetch(`http://localhost:5000/activity?task_id=${id}`);
-      const json = await res.json();
-
+      const json = await apiGet(`/activity?task_id=${id}`);
       if (json.success) setActivity(json.data);
     } catch (err) {
-      console.error("Failed to load activity log", err);
+      console.error("Failed to load activity", err);
     }
   }
 
@@ -60,26 +55,23 @@ export default function TaskDetailPage() {
     if (!activityText.trim()) return;
 
     try {
-      const res = await fetch("http://localhost:5000/activity", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          task_id: id,
-          message: activityText,
-        }),
+      const json = await apiPost("/activity", {
+        task_id: id,
+        message: activityText,
       });
-
-      const json = await res.json();
 
       if (json.success) {
         setActivityText("");
-        fetchActivity(); // refresh logs
+        fetchActivity();
       }
     } catch (err) {
       console.error("Failed to log activity", err);
     }
   }
 
+  // ------------------------------
+  // UI
+  // ------------------------------
   if (loading) return <p>Loading task...</p>;
   if (!task) return <p className="text-red-500">Task not found.</p>;
 
@@ -99,7 +91,6 @@ export default function TaskDetailPage() {
 
         <div className="flex flex-col gap-2 items-end">
           <StatusBadge status={task.status} />
-
           <button
             onClick={() => setOpenStatusModal(true)}
             className="px-4 py-2 bg-blue-600 text-white rounded-md"
@@ -134,7 +125,7 @@ export default function TaskDetailPage() {
         </ul>
       </div>
 
-      {/* ADD NEW ACTIVITY */}
+      {/* ADD ACTIVITY */}
       <div className="mt-6 p-4 border rounded">
         <h3 className="font-semibold text-lg">Add Activity</h3>
 

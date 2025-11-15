@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { apiPost } from "@/lib/api";
 
 export default function CreateProjectModal({ open, setOpen, refresh }) {
   const [name, setName] = useState("");
@@ -9,20 +10,28 @@ export default function CreateProjectModal({ open, setOpen, refresh }) {
   if (!open) return null;
 
   async function createProject() {
+    if (!name.trim()) return alert("Project name is required");
+
     try {
-      const res = await fetch("http://localhost:5000/projects", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, description: desc }),
+      // Call backend using wrapper (auto-handles API base URL)
+      const json = await apiPost("/projects", {
+        name,
+        description: desc,
       });
 
-      const data = await res.json();
-      if (data.success) {
-        refresh();
+      if (json.success) {
+        setName("");
+        setDesc("");
         setOpen(false);
+
+        if (typeof refresh === "function") refresh();
+      } else {
+        console.error("Create project failed:", json);
+        alert("Failed to create project");
       }
     } catch (err) {
-      console.error("Failed to create project", err);
+      console.error("Project creation error:", err);
+      alert("Error creating project");
     }
   }
 

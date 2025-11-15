@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "@/lib/supabaseClient";
+import { apiPatch } from "@/lib/api";
 
 export default function TaskStatusModal({ open, setOpen, task, refresh }) {
   const [loading, setLoading] = useState(false);
@@ -12,9 +13,11 @@ export default function TaskStatusModal({ open, setOpen, task, refresh }) {
     setLoading(true);
 
     try {
+      // Get logged-in user
       const {
         data: { user },
       } = await supabase.auth.getUser();
+
       const userId = user?.id;
       if (!userId) {
         alert("Not authenticated");
@@ -22,22 +25,18 @@ export default function TaskStatusModal({ open, setOpen, task, refresh }) {
         return;
       }
 
-      const res = await fetch(`http://localhost:5000/tasks/${task.id}`, {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-          "x-user-id": userId,
-        },
-        body: JSON.stringify({ status: "completed" }),
-      });
-
-      const json = await res.json();
+      // Update status using API wrapper
+      const json = await apiPatch(
+        `/tasks/${task.id}`,
+        { status: "completed" },
+        { "x-user-id": userId }
+      );
 
       if (json.success) {
         if (typeof refresh === "function") refresh();
         setOpen(false);
       } else {
-        console.error("Failed to update status", json);
+        console.error("Failed to update task status", json);
         alert("Failed to update status");
       }
     } catch (err) {
@@ -55,11 +54,18 @@ export default function TaskStatusModal({ open, setOpen, task, refresh }) {
         <p className="text-sm text-gray-500 mt-2">Task: {task.title}</p>
 
         <div className="mt-6 flex justify-end space-x-3">
-          <button onClick={() => setOpen(false)} className="px-4 py-2 border rounded">
+          <button
+            onClick={() => setOpen(false)}
+            className="px-4 py-2 border rounded"
+          >
             Cancel
           </button>
 
-          <button onClick={markAsCompleted} className="px-4 py-2 bg-green-600 text-white rounded" disabled={loading}>
+          <button
+            onClick={markAsCompleted}
+            className="px-4 py-2 bg-green-600 text-white rounded"
+            disabled={loading}
+          >
             {loading ? "Updating…" : "Mark as Completed"}
           </button>
         </div>
